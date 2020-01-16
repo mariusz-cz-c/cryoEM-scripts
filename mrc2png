@@ -1,0 +1,91 @@
+#!/bin/bash
+# This script will convert mrc images into downsampled png images and move them into png/ subdirectory
+# Mariusz Czarnocki-Cieciura, 	25.06.2019
+# last modification: 		16.01.2020
+
+my_dir="$(dirname "$0")"
+. ${my_dir}/include/functions.sh								# include functions
+SECONDS=0											# timer
+max_threads="16"
+
+echo "+------------------------------------------------------------------------------+"
+echo "| script created by Mariusz Czarnocki-Cieciura, 25.06.2019,                    |"
+echo "| last modification: 16.01.2020                                                |"
+echo "+------------------------------------------------------------------------------+"
+
+####################################################################################################
+### 02. prepare list of all mrc files and split it into threads                                  ###
+####################################################################################################
+
+current_thread="1"
+number_of_images=$(ls 2>/dev/null -Ubad1 -- *.mrc | wc -l)			# total number of micrographs
+
+if [ "$number_of_images" = 0 ]; then
+    echo "ERROR: no *.mrc files found, quitting..."
+    exit
+fi
+
+for f in *.mrc; do
+	image_list[$current_thread]="${image_list[$current_thread]} $f"
+	((current_thread++))
+	if [ "$current_thread" -gt "$max_threads" ]; then
+		current_thread="1"
+	fi
+done
+
+####################################################################################################
+### 03. create 'png' subdirectory                                                                ###
+####################################################################################################
+
+if [ -d "png" ]; then							# check if output directory exists
+    echo "WARNING: output directory png already exists."
+    confirm && mkdir -p png || exit
+else
+    mkdir -p png
+fi
+
+####################################################################################################
+### 04. define functions for all conversions                                                     ###
+####################################################################################################
+
+# convert mrc to png using e2proc2d.py and then to 8bit png using imagemagic convert
+convert_png(){			# $1 -> list of images to be processed
+	local full_list=$1	
+	for f in $full_list; do
+	    e2proc2d.py $f png/${f/.mrc/}.png --fixintscaling sane --fouriershrink 4 > /dev/null 2>&1
+	    convert png/${f/.mrc/}.png -auto-level -depth 8 png/${f/.mrc/}.png
+	done
+}
+
+# progress()
+# usage: progress folder=$1 search_pattern=$2 MAX_NUMBER=$3 SKIP_FILES=${4:-0}
+# optional modifier 1: progress_sleep_time=n (refresh progress bar every n seconds, default 1)
+# optional modifier 2: unset=false (true or false, default false)
+
+
+####################################################################################################
+### 06. convert mrc images to png                                                                ###
+####################################################################################################
+
+echo "Converting mrc images to png..."
+
+progress "png" "*.png" $number_of_images 0 &				# start progress function as subprocess			
+MYSELF=$!									# PID of progress function
+
+for f in "${!image_list[@]}"; do 						# loop through keys in this array
+	convert_png "${image_list[$f]}" &					# start calculations for each thread
+	pids[${f}]=$! 								# pids of all calculations
+done
+
+# wait for all pids
+for pid in ${pids[*]}; do
+    wait $pid
+done
+	
+kill $MYSELF > /dev/null 2>&1							# kill progress function
+wait > /dev/null 2>&1								# this will clean the message 'terminated...'
+
+duration=$SECONDS								# total time of processing
+time=$(TZ=UTC0 printf "%(%Hh:%Mm:%Ss)T" "$duration")				# total time as string
+echo "Done! Processing took $time"
+
