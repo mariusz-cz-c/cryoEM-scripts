@@ -83,6 +83,7 @@ convert_png(){			# $1 -> list of images to be processed
 	local full_list=$1	
 	for f in $full_list; do
 	    e2proc2d.py $f png/${f/.tif/}.png --fixintscaling sane --fouriershrink 4  > /dev/null 2>&1
+	    convert png/${f/.tif/}.png -auto-level -depth 8 png/${f/.tif/}.png
 	done
 }
 
