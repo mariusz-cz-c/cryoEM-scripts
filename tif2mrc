@@ -1,0 +1,147 @@
+#!/bin/bash
+# This script will convert tif images into 16 bit mrc images and move them into Micrographs/ subdirectory,
+# additionaly, downsampled png images will be created in png/ and original tif images will be moved to tif/ subdirectory
+# Mariusz Czarnocki-Cieciura, 	05.04.2018
+# last modification: 		27.01.2020
+
+my_dir="$(dirname "$0")"
+. ${my_dir}/include/functions.sh								# include functions
+
+SECONDS=0											# timer
+max_threads="16"
+
+echo "+------------------------------------------------------------------------------+"
+echo "| script created by Mariusz Czarnocki-Cieciura, 05.04.2018,                    |"
+echo "| last modification: 27.01.2020                                                |"
+echo "+------------------------------------------------------------------------------+"
+
+####################################################################################################
+### 01. rename all *.tif files to get rid of spaces in filenames                                 ###
+####################################################################################################
+
+rename "s/ /_/g" *.tif
+
+####################################################################################################
+### 02. prepare list of all tif files and split it into threads                                  ###
+####################################################################################################
+
+current_thread="1"
+number_of_images=$(ls 2>/dev/null -Ubad1 -- *.tif | wc -l)			# total number of micrographs
+
+if [ "$number_of_images" = 0 ]; then
+    echo "ERROR: no *.tif files found, quitting..."
+    exit
+fi
+
+for f in *.tif; do
+	image_list[$current_thread]="${image_list[$current_thread]} $f"
+	((current_thread++))
+	if [ "$current_thread" -gt "$max_threads" ]; then
+		current_thread="1"
+	fi
+done
+
+####################################################################################################
+### 03. create 'Micrographs', 'png' and 'tif' subdirectories                                     ###
+####################################################################################################
+
+if [ -d "Micrographs" ]; then						# check if output directory exists
+    echo "WARNING: output directory Micrographs already exists."
+    confirm && mkdir -p Micrographs || exit
+else
+    mkdir -p Micrographs
+fi
+
+if [ -d "png" ]; then							# check if output directory exists
+    echo "WARNING: output directory png already exists."
+    confirm && mkdir -p png || exit
+else
+    mkdir -p png
+fi
+
+if [ -d "tif" ]; then							# check if output directory exists
+    echo "WARNING: output directory tif already exists."
+    confirm && mkdir -p tif || exit					# create output directory
+else
+    mkdir -p tif
+fi
+
+####################################################################################################
+### 04. define functions for all conversions                                                     ###
+####################################################################################################
+
+# convert mrc to tif using e2proc2d.py
+convert_tif(){			# $1 -> list of images to be processed
+	local full_list=$1	
+	for f in $full_list; do
+	    e2proc2d.py $f Micrographs/${f/.tif/}.mrc --outmode int16 > /dev/null 2>&1
+	done
+}
+
+# convert png to tif using e2proc2d.py
+convert_png(){			# $1 -> list of images to be processed
+	local full_list=$1	
+	for f in $full_list; do
+	    e2proc2d.py $f png/${f/.tif/}.png --fixintscaling sane --fouriershrink 4  > /dev/null 2>&1
+	done
+}
+
+# progress()
+# usage: progress folder=$1 search_pattern=$2 MAX_NUMBER=$3 SKIP_FILES=${4:-0}
+# optional modifier 1: progress_sleep_time=n (refresh progress bar every n seconds, default 1)
+# optional modifier 2: unset=false (true or false, default false)
+
+####################################################################################################
+### 05. convert tif images to mrc                                                                ###
+####################################################################################################
+
+echo "Converting tif images to mrc..."
+pline="==============================================><>>"
+progress "Micrographs" "*.mrc" $number_of_images 0 &			# start progress function as subprocess			
+MYSELF=$!									# PID of progress function
+
+for f in "${!image_list[@]}"; do 						# loop through keys in this array
+	convert_tif "${image_list[$f]}" &					# start calculations for each thread
+	pids[${f}]=$! 								# pids of all calculations
+done
+
+# wait for all pids
+for pid in ${pids[*]}; do
+    wait $pid
+done
+	
+kill $MYSELF > /dev/null 2>&1							# kill progress function
+wait > /dev/null 2>&1								# this will clean the message 'terminated...'
+
+####################################################################################################
+### 06. convert tif images to png                                                                ###
+####################################################################################################
+
+echo "Converting tif images to png..."
+
+progress "png" "*.png" $number_of_images 0 &				# start progress function as subprocess			
+MYSELF=$!									# PID of progress function
+
+for f in "${!image_list[@]}"; do 						# loop through keys in this array
+	convert_png "${image_list[$f]}" &					# start calculations for each thread
+	pids[${f}]=$! 								# pids of all calculations
+done
+
+# wait for all pids
+for pid in ${pids[*]}; do
+    wait $pid
+done
+	
+kill $MYSELF > /dev/null 2>&1							# kill progress function
+wait > /dev/null 2>&1								# this will clean the message 'terminated...'
+
+####################################################################################################
+### 07. move original tif images to 'tif' subdirectory                                           ###
+####################################################################################################
+echo "moving original tif images to 'tif' subdirectory..."
+mv *.tif tif/
+
+duration=$SECONDS								# total time of processing
+time=$(TZ=UTC0 printf "%(%Hh:%Mm:%Ss)T" "$duration")				# total time as string
+echo "Done! Processing took $time"
+
