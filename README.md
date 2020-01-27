@@ -7,6 +7,15 @@ This script converts all *.mrc images present in current directory into downsamp
 
 **IMPORTANT:** This script runs multiple copies of e2proc2d.py / convert commands in parallel and by default it uses 16 threads. If you plan to run it on machine with smaller number of cores/threads (or use more threads in parallel), please modify the value of `max_threads` variable defined at the beginning of this script.
 
+## tif2mrc
+This script converts all *.tif images present in current directory into mrc files. It creates 3 output directories: Micrographs/ directory with mrc images that can be imported directly into RELION pipeline; png/ directory with downsampled png images; and tif/ directory, where original tif images are moved.
+
+**tif2mrc** needs to source include/functions.sh script; it requires EMAN2 software (e2proc2d.py) and 'convert' tool from Imagemagick package.
+
+**IMPORTANT:** This script runs multiple copies of e2proc2d.py / convert commands in parallel and by default it uses 16 threads. If you plan to run it on machine with smaller number of cores/threads (or use more threads in parallel), please modify the value of `max_threads` variable defined at the beginning of this script.
+
+
+
 ## rln_find_movies
 This script can be used to collect all movies from EPU session into single Movies subdirectory. Run it inside RELION's project directory - it will make *Movies* subdirectory and create symbolic links to all movies found in provided EPU session path subdirectories.
 
