@@ -16,15 +16,22 @@ This script converts all *.tif images present in current directory into mrc file
 
 
 
-## rln_find_movies
+## rln_find_movies.sh
 This script can be used to collect all movies from EPU session into single Movies subdirectory. Run it inside RELION's project directory - it will make *Movies* subdirectory and create symbolic links to all movies found in provided EPU session path subdirectories.
 
 Usage:
 ```
-rln_find_movies path_to_movies [Movies]
+rln_find_movies.sh path_to_movies [Movies]
 ```
 where: 
  * *path_to_movies* - **full** path to folder with EPU session, e.g.: `/media/workspaceHDD/190129-KRIOS/supervisor_20190128_151058`
  * *Movies* - **(optional)** subfolder for storing movies (default: Movies)
  
  
+## rln_monitor_progress.sh ##
+This script prints progress of Class2D, Class3D or Refine3D job from RELION. Run it inside RELION's project directory with job number as an argument, e.g.:
+```
+rln_monitor_progress.sh 006
+```
+
+**rln_monitor_progress.sh** requires gnuplot for printing graphs.
