@@ -39,4 +39,6 @@ rln_monitor_progress.sh 006
 ## rln_gctf_local.sh ##
 Wrapper script for Gctf to calculate local defocus values for particles from Extract or Polish job inside RELION's project directory. After calculation of local defocus values it uses modified version of star_replace_UVA.com by Kai Zhang to create new star file with local UVA values.
 
+Run it directly from RELION's project directory - it will ask for all necessary informations, including output directory with modified particles.star file that can be afterwards imported into RELION's pipeline. 
+
 **rln_gctf_local.sh** requires Gctf configured for RELION (as $RELION_GCTF_EXECUTABLE environmental variable) and gnuplot + Ghostscript for printing pdf report with graphs.
