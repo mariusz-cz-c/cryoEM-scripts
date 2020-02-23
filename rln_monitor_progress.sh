@@ -1,11 +1,11 @@
 #!/bin/bash
 # Mariusz Czarnocki-Cieciura, 	17.12.2018
-# last modification: 		20.02.2019
+# last modification: 		23.02.2020
 
 
 echo "+------------------------------------------------------------------------------+"
 echo "| script created by Mariusz Czarnocki-Cieciura, 17.12.2018,                    |"
-echo "| last modification: 20.02.2019                                                |"
+echo "| last modification: 23.02.2030                                                |"
 echo "+------------------------------------------------------------------------------+"
 
 ####################################################################################################
@@ -54,8 +54,7 @@ grep_resolution(){
 
 # this function will grep for final resolution in run.out file and print it to stdout
 grep_final_resolution(){
-    grep "Final resolution" $job_dir/run.out | \
-	sed -e 's/ Auto-refine: + Final resolution (without masking) is: //' | awk '{printf("%12.6f\n", $1)}'
+    grep "Final resolution (" $job_dir/run.out | sed -e 's/ Auto-refine: + //'
 }
 
 # this function conuts particles in each class using awk/gawk
@@ -212,7 +211,7 @@ fi
 
 if [ $job_type == "Refine3D" ] ; then
     final_resolution=$(grep_final_resolution)
-    final_resolution=${final_resolution:-"(not determined yet)"} # substu
+    final_resolution=${final_resolution:-"Final resolution not determined yet..."} # substr
 fi
 
 ####################################################################################################
@@ -223,7 +222,7 @@ if [ $job_type == "Refine3D" ] ; then
     echo -e "iteration\torientations\toffsets   \tresolution"
     paste $job_dir/$orientations_output $job_dir/$offsets_output $job_dir/$resolution_output | \
 	awk '{print $1 "\t" $2 "\t" $4 "\t" $6}'
-    echo -e "\nfinal resolution: $final_resolution\n"
+    echo -e "\n$final_resolution\n"
 else
     echo -e "iteration\torientations\toffsets   \tclasses"
     paste $job_dir/$orientations_output $job_dir/$offsets_output $job_dir/$classes_output | awk '{print $1 "\t" $2 "\t" $4 "\t" $6}'
