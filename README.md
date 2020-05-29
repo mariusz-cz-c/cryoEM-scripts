@@ -34,7 +34,7 @@ This script prints progress of Class2D, Class3D or Refine3D job from RELION. Run
 rln_monitor_progress.sh 006
 ```
 
-**rln_monitor_progress.sh** requires gnuplot for printing graphs.
+**rln_monitor_progress.sh** requires gnuplot for printing graphs and imagemagick for converting images.
 
 ## rln_gctf_local.sh ##
 Wrapper script for Gctf to calculate local defocus values for particles from Extract or Polish job inside RELION's project directory. After calculation of local defocus values it uses modified version of star_replace_UVA.com by Kai Zhang to create new star file with local UVA values.
