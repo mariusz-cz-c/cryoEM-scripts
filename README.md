@@ -42,3 +42,13 @@ Wrapper script for Gctf to calculate local defocus values for particles from Ext
 Run it directly from RELION's project directory - it will ask for all necessary informations, including output directory with modified particles.star file that can be afterwards imported into RELION's pipeline. 
 
 **rln_gctf_local.sh** requires Gctf configured for RELION (as $RELION_GCTF_EXECUTABLE environmental variable) and gnuplot + Ghostscript for printing pdf report with graphs.
+
+## rln_gctf_local_31.sh ##
+New version of Gctf wrapper compatible with RELION 3.1 (under developement!).
+This version of the script should be executed as RELION's External job type with the following arguments:
+ * External executable: rln_gctf_local_31.sh (or full path if script is not in PATH)
+ * Inpiut micrographs: micrographs.star file from CtfFind job
+ * Input particles: particles.star file (Extract/Select job type tested, but other particles.star SHOULD also work here)
+ * Number of threads: 10 (or different reasonable value -> this number of Gctf copies will be run simultaneously on single GPU card)
+
+**rln_gctf_local_31.sh** requires Gctf configured for RELION (as $RELION_GCTF_EXECUTABLE environmental variable) and gnuplot + Ghostscript for printing pdf report with graphs.
