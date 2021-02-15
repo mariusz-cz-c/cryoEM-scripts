@@ -76,7 +76,7 @@ count_in_class(){
     rlnReferenceImage=$(awk 'NR<50 && /rlnReferenceImage/{print $2}'	$model_filename | cut -c 2-)
     rlnClassDistribution=$(awk 'NR<50 && /rlnClassDistribution/{print $2}'	$model_filename | cut -c 2-)
     rlnEstimatedResolution=$(awk 'NR<50 && /rlnEstimatedResolution/{print $2}'	$model_filename | cut -c 2-)
-    rlnClassNumber=$(awk 'NR<50 && /rlnClassNumber/{print $2}'	$data_filename | cut -c 2-)
+    rlnClassNumber=$(awk 'NR<100 && /rlnClassNumber/{print $2}'	$data_filename | cut -c 2-)
 
     # process both files
     gawk 'BEGIN{}/mrc/{								# read only lines with 'mrc' 
